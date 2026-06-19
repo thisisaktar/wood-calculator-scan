@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Volume Calculator</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne+Mono&family=Syne:wght@400;700&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #f4f4f0;
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 2rem 1rem 3rem;
+  }
+
+  .wrap { width: 100%; max-width: 720px; }
+
+  /* HEADER */
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 1rem;
+  }
+  .header h1 { font-size: 20px; font-weight: 700; color: #111; }
+  .header span { font-size: 12px; color: #888; font-family: 'Syne Mono', monospace; }
+  .scan-toggle-btn {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #1D9E75;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: 'Syne', sans-serif;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .scan-toggle-btn:hover { opacity: 0.85; }
+
+  /* PENDING CHIPS */
+  .pending { display: flex; gap: 8px; margin-bottom: 10px; }
+  .pending-chip {
+    font-family: 'Syne Mono', monospace;
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1.5px dashed #ccc;
+    color: #999;
+    background: #fff;
+    transition: all 0.2s;
+  }
+  .pending-chip.set {
+    border-color: #1D9E75;
+    color: #1D9E75;
+    background: #E1F5EE;
+    border-style: solid;
+  }
+
+  /* PANELS */
+  .panel {
+    background: #fff;
+    border: 1px solid #e0e0da;
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+  .panel-label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: #999;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .btn-grid { display: grid; gap: 5px; }
+  .radius-grid { grid-template-columns: repeat(6, 1fr); }
+  .height-grid { grid-template-columns: repeat(7, 1fr); }
+
+  .btn {
+    font-family: 'Syne Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    background: #f4f4f0;
+    border: 1px solid #e0e0da;
+    border-radius: 6px;
+    padding: 9px 2px;
+    cursor: pointer;
+    color: #222;
+    transition: all 0.12s;
+    text-align: center;
+    line-height: 1;
+  }
+  .btn:hover { border-color: #bbb; background: #fff; }
+  .btn.active { background: #1D9E75; border-color: #1D9E75; color: #fff; }
+
+  /* LOG */
+  .log-panel {
+    background: #fff;
+    border: 1px solid #e0e0da;
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
+    min-height: 70px;
+  }
+  .log-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: #999;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .log-list { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+  .log-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Syne Mono', monospace;
+    font-size: 16px;
+    padding: 6px 10px;
+    background: #f4f4f0;
+    border-radius: 6px;
+    color: #222;
+  }
+  .log-tag {
+    font-size: 9px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: #e0e0da;
+    color: #666;
+    flex-shrink: 0;
+  }
+  .log-tag.scan { background: #1D9E75; color: #fff; }
+  .log-val { color: #1D9E75; font-weight: 700; margin-left: auto; }
+  .log-rm { background: none; border: none; color: #ccc; cursor: pointer; font-size: 14px; padding: 0 2px; flex-shrink: 0; }
+  .log-rm:hover { color: #c0392b; }
+  .log-empty { font-size: 14px; color: #aaa; font-style: italic; font-family: 'Syne Mono', monospace; }
+
+  /* FOOTER */
+  .footer { display: flex; gap: 10px; align-items: stretch; }
+  .result-box {
+    flex: 1;
+    background: #f4f4f0;
+    border: 1px solid #e0e0da;
+    border-radius: 12px;
+    padding: 14px 18px;
+  }
+  .result-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: #999; font-weight: 700; }
+  .result-num { font-size: 30px; font-weight: 700; font-family: 'Syne Mono', monospace; color: #111; margin-top: 4px; }
+  .result-unit { font-size: 12px; color: #aaa; margin-top: 2px; }
+
+  .action-btns { display: flex; flex-direction: column; gap: 6px; }
+  .act-btn {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    border-radius: 6px;
+    padding: 11px 20px;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.12s, transform 0.1s;
+    white-space: nowrap;
+  }
+  .act-btn:active { transform: scale(0.97); }
+  .act-btn.calc { background: #1D9E75; color: #fff; }
+  .act-btn.undo { background: #f4f4f0; color: #222; border: 1px solid #e0e0da; }
+  .act-btn.reset { background: #f4f4f0; color: #c0392b; border: 1px solid #e0e0da; }
+
+  /* ── SCAN MODAL ── */
+  #scanModal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 100;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  #scanModal.open { display: flex; }
+
+  .modal-sheet {
+    background: #fff;
+    border-radius: 20px 20px 0 0;
+    width: 100%;
+    max-width: 480px;
+    max-height: 92dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: slideUp 0.22s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+  .modal-handle {
+    width: 36px; height: 4px;
+    background: #e0e0da; border-radius: 4px;
+    margin: 10px auto 0; flex-shrink: 0;
+  }
+  .modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px 10px; border-bottom: 1px solid #f0f0ea; flex-shrink: 0;
+  }
+  .modal-title { font-size: 14px; font-weight: 700; color: #111; }
+  .modal-close {
+    background: #f4f4f0; border: none; border-radius: 50%;
+    width: 30px; height: 30px; font-size: 14px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; color: #666;
+  }
+
+  .modal-body { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+
+  .scan-screen { display: none; flex-direction: column; flex: 1; }
+  .scan-screen.active { display: flex; }
+
+  /* SETUP */
+  #ss-setup { padding: 20px 18px; gap: 14px; }
+  .setup-title { font-size: 16px; font-weight: 700; color: #111; }
+  .setup-sub { font-size: 13px; color: #666; line-height: 1.7; }
+  .setup-steps {
+    background: #f4f4f0; border-radius: 10px;
+    padding: 14px 16px; display: flex; flex-direction: column; gap: 12px;
+  }
+  .setup-step { display: flex; gap: 10px; align-items: flex-start; }
+  .step-num {
+    min-width: 24px; height: 24px; background: #1D9E75; color: #fff;
+    border-radius: 50%; font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;
+  }
+  .step-text { font-size: 13px; color: #444; line-height: 1.6; }
+  .step-text a { color: #1D9E75; font-weight: 700; }
+  .step-text b { color: #111; }
+
+  .key-input-wrap { display: flex; flex-direction: column; gap: 6px; }
+  .key-input-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; color: #999; text-transform: uppercase; }
+  .key-input {
+    width: 100%; background: #f4f4f0; border: 1.5px solid #e0e0da;
+    border-radius: 8px; padding: 12px 14px; font-size: 13px;
+    font-family: 'Syne Mono', monospace; color: #111; outline: none;
+  }
+  .key-input:focus { border-color: #1D9E75; }
+  .key-err { font-size: 12px; color: #c0392b; display: none; }
+  .save-btn {
+    background: #1D9E75; color: #fff; border: none; border-radius: 8px;
+    padding: 14px; font-size: 15px; font-weight: 700;
+    font-family: 'Syne', sans-serif; cursor: pointer; width: 100%;
+  }
+  .free-note { font-size: 11px; color: #aaa; text-align: center; line-height: 1.7; font-family: 'Syne Mono', monospace; }
+
+  /* IDLE */
+  #ss-idle { align-items: center; justify-content: center; gap: 14px; padding: 28px 24px; text-align: center; }
+  .idle-icon { font-size: 52px; }
+  .idle-title { font-size: 16px; font-weight: 700; color: #111; }
+  .idle-hint { font-size: 13px; color: #888; line-height: 1.9; font-family: 'Syne Mono', monospace; }
+  .idle-hint b { color: #1D9E75; }
+  .open-cam-btn {
+    background: #1D9E75; color: #fff; border: none; border-radius: 10px;
+    padding: 14px 28px; font-size: 15px; font-weight: 700;
+    font-family: 'Syne', sans-serif; cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .upload-btn-idle {
+    background: #f4f4f0; color: #444; border: 1px solid #e0e0da;
+    border-radius: 10px; padding: 12px 24px; font-size: 14px; font-weight: 700;
+    font-family: 'Syne', sans-serif; cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .change-key-btn {
+    background: none; border: none; font-size: 11px; color: #bbb;
+    cursor: pointer; text-decoration: underline; font-family: 'Syne', sans-serif;
+  }
+  #fileInput { display: none; }
+
+  /* CAMERA */
+  #ss-camera { background: #000; position: relative; min-height: 360px; }
+  #video { width: 100%; object-fit: cover; display: block; max-height: 380px; }
+  .cam-guide {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -58%);
+    width: 85%; height: 55%;
+    border: 2px solid rgba(29,158,117,0.8); border-radius: 10px; pointer-events: none;
+  }
+  .cam-guide span {
+    position: absolute; top: -24px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.6); color: #1D9E75;
+    font-size: 10px; font-family: 'Syne Mono', monospace; letter-spacing: 1px;
+    padding: 3px 12px; border-radius: 20px; white-space: nowrap;
+  }
+  .cam-bar {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 16px 24px 22px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.85));
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .icon-btn {
+    background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 50%; width: 46px; height: 46px;
+    color: #fff; font-size: 18px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .shutter {
+    width: 68px; height: 68px; border-radius: 50%;
+    background: #fff; border: 4px solid #1D9E75;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: transform 0.1s;
+  }
+  .shutter:active { transform: scale(0.93); }
+  .shutter-inner { width: 52px; height: 52px; border-radius: 50%; background: #1D9E75; }
+
+  /* PREVIEW */
+  #ss-preview { flex-direction: column; }
+  #previewImg { width: 100%; object-fit: contain; background: #000; display: block; max-height: 340px; }
+  .preview-bar {
+    padding: 12px 14px; display: flex; gap: 10px;
+    border-top: 1px solid #f0f0ea; background: #fff; flex-shrink: 0;
+  }
+  .out-btn {
+    flex: 1; background: #f4f4f0; border: 1px solid #e0e0da; color: #444;
+    border-radius: 8px; padding: 12px; font-size: 14px; font-weight: 700;
+    cursor: pointer; font-family: 'Syne', sans-serif;
+  }
+  .prim-btn {
+    flex: 2; background: #1D9E75; color: #fff; border: none;
+    border-radius: 8px; padding: 12px; font-size: 14px; font-weight: 700;
+    cursor: pointer; font-family: 'Syne', sans-serif;
+  }
+  .err-box {
+    background: #fdf0ef; color: #c0392b; border-top: 1px solid #f5d5d0;
+    padding: 10px 14px; font-size: 12px; line-height: 1.6;
+    font-family: 'Syne Mono', monospace; display: none; flex-shrink: 0;
+  }
+
+  /* LOADING */
+  #ss-loading { align-items: center; justify-content: center; gap: 14px; padding: 32px; text-align: center; }
+  #loadThumb { width: 68%; border-radius: 10px; opacity: 0.25; filter: blur(3px); }
+  .spinner {
+    width: 42px; height: 42px;
+    border: 3px solid #e0e0da; border-top-color: #1D9E75;
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .load-title { font-size: 16px; font-weight: 700; color: #111; }
+  .load-sub { font-size: 11px; color: #aaa; font-family: 'Syne Mono', monospace; letter-spacing: 1px; }
+
+  /* RESULTS */
+  #ss-results { padding: 16px; gap: 10px; }
+  .scan-result-header { display: flex; align-items: center; justify-content: space-between; }
+  .scan-result-title { font-size: 14px; font-weight: 700; color: #111; }
+  .scan-count-pill {
+    font-size: 11px; font-family: 'Syne Mono', monospace;
+    background: #E1F5EE; color: #1D9E75; border-radius: 20px; padding: 3px 10px;
+  }
+  .scan-entries-list { display: flex; flex-direction: column; gap: 6px; }
+  .scan-entry {
+    display: flex; align-items: center; gap: 8px;
+    background: #f4f4f0; border-radius: 8px; padding: 10px 12px;
+    font-family: 'Syne Mono', monospace; font-size: 14px;
+  }
+  .se-label { flex: 1; color: #333; }
+  .se-sub { color: #aaa; font-size: 11px; }
+  .se-vol { color: #1D9E75; font-weight: 700; flex-shrink: 0; }
+  .se-rm { background: none; border: none; color: #ccc; cursor: pointer; font-size: 14px; padding: 0 2px; flex-shrink: 0; }
+  .se-rm:hover { color: #c0392b; }
+  .scan-no-data { font-size: 13px; color: #aaa; text-align: center; padding: 20px; font-family: 'Syne Mono', monospace; line-height: 1.8; }
+  .add-all-btn {
+    background: #1D9E75; color: #fff; border: none; border-radius: 8px;
+    padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer;
+    font-family: 'Syne', sans-serif; width: 100%;
+  }
+  .scan-again-btn {
+    background: #f4f4f0; color: #444; border: 1px solid #e0e0da;
+    border-radius: 8px; padding: 12px; font-size: 14px; font-weight: 700;
+    cursor: pointer; font-family: 'Syne', sans-serif; width: 100%;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="header">
+    <h1>Volume Calculator</h1>
+    <span>radius × height → ft³</span>
+    <button class="scan-toggle-btn" onclick="openScan()">
+      <i class="ti ti-camera"></i> Scan
+    </button>
+  </div>
+
+  <!-- PENDING CHIPS -->
+  <div class="pending">
+    <div class="pending-chip" id="chip-r">Radius —</div>
+    <div class="pending-chip" id="chip-h">Height —</div>
+  </div>
+
+  <!-- HEIGHT PANEL -->
+  <div class="panel">
+    <div class="panel-label">Height (ft)</div>
+    <div class="btn-grid height-grid" id="height-btns"></div>
+  </div>
+
+  <!-- RADIUS PANEL -->
+  <div class="panel">
+    <div class="panel-label">Radius (ft.in)</div>
+    <div class="btn-grid radius-grid" id="radius-btns"></div>
+  </div>
+
+  <!-- LOG -->
+  <div class="log-panel">
+    <div class="log-label">Entries</div>
+    <ul class="log-list" id="log-list">
+      <li class="log-empty">No entries yet</li>
+    </ul>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="result-box">
+      <div class="result-label">Total Volume</div>
+      <div class="result-num" id="result-num">—</div>
+      <div class="result-unit">cubic feet</div>
+    </div>
+    <div class="action-btns">
+      <button class="act-btn calc" id="cal">Calculate</button>
+      <button class="act-btn undo" id="cnl">Undo Last</button>
+      <button class="act-btn reset" id="rst">Clear All</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── SCAN MODAL ── -->
+<div id="scanModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">Scan Measurements</span>
+      <button class="modal-close" onclick="closeScan()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- SETUP SCREEN -->
+      <div class="scan-screen active" id="ss-setup">
+        <div class="setup-title">One-time Free Setup</div>
+        <div class="setup-sub">Get a free API key from Google AI Studio — no credit card required.</div>
+        <div class="setup-steps">
+          <div class="setup-step">
+            <div class="step-num">1</div>
+            <div class="step-text">Open <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a> and sign in with your Google account</div>
+          </div>
+          <div class="setup-step">
+            <div class="step-num">2</div>
+            <div class="step-text">Click <b>"Create API key"</b> and copy it</div>
+          </div>
+          <div class="setup-step">
+            <div class="step-num">3</div>
+            <div class="step-text">Paste below and tap <b>Save</b> — done forever</div>
+          </div>
+        </div>
+        <div class="key-input-wrap">
+          <div class="key-input-label">Your Gemini API Key</div>
+          <input class="key-input" id="apiInput" type="text" placeholder="Paste your Gemini API key…" autocomplete="off" spellcheck="false"/>
+          <div class="key-err" id="apiErr">⚠ Please enter a valid API key</div>
+        </div>
+        <button class="save-btn" onclick="saveKey()">Save & Start Scanning →</button>
+        <div class="free-note">Google AI Studio offers a generous free tier.<br>Powered by Gemini 1.5 Flash vision model.</div>
+      </div>
+
+      <!-- IDLE SCREEN -->
+      <div class="scan-screen" id="ss-idle">
+        <div class="idle-icon">📷</div>
+        <div class="idle-title">Scan Handwritten Measurements</div>
+        <div class="idle-hint">
+          Point camera at measurements like:<br>
+          <b>4 x 12 &nbsp;|&nbsp; 5 x 36 &nbsp;|&nbsp; 6 x 24</b><br>
+          Radius (in) × Height (ft.in)
+        </div>
+        <button class="open-cam-btn" onclick="startCamera()">
+          <i class="ti ti-camera"></i> Open Camera
+        </button>
+        <button class="upload-btn-idle" onclick="document.getElementById('fileInput').click()">
+          <i class="ti ti-upload"></i> Upload Photo
+        </button>
+        <input type="file" id="fileInput" accept="image/*" onchange="handleUpload(event)"/>
+        <button class="change-key-btn" onclick="changeKey()">⚙ Change API Key</button>
+      </div>
+
+      <!-- CAMERA SCREEN -->
+      <div class="scan-screen" id="ss-camera">
+        <video id="video" playsinline autoplay muted></video>
+        <div class="cam-guide"><span>ALIGN MEASUREMENTS INSIDE</span></div>
+        <div class="cam-bar">
+          <button class="icon-btn" onclick="ssShow('ss-idle');stopCam()">✕</button>
+          <button class="shutter" onclick="capture()"><div class="shutter-inner"></div></button>
+          <button class="icon-btn" onclick="flipCam()">🔄</button>
+        </div>
+      </div>
+
+      <!-- PREVIEW SCREEN -->
+      <div class="scan-screen" id="ss-preview">
+        <img id="previewImg" src="" alt=""/>
+        <div id="errBox" class="err-box"></div>
+        <div class="preview-bar">
+          <button class="out-btn" onclick="startCamera()">📷 Retake</button>
+          <button class="prim-btn" onclick="scanImage()">🔍 Scan & Calculate</button>
+        </div>
+      </div>
+
+      <!-- LOADING SCREEN -->
+      <div class="scan-screen" id="ss-loading">
+        <img id="loadThumb" src="" alt=""/>
+        <div class="spinner"></div>
+        <div class="load-title">Reading measurements…</div>
+        <div class="load-sub" id="loadStatus">AI IS RECOGNISING HANDWRITING</div>
+      </div>
+
+      <!-- RESULTS SCREEN -->
+      <div class="scan-screen" id="ss-results">
+        <div class="scan-result-header">
+          <div class="scan-result-title">Scanned Entries</div>
+          <div class="scan-count-pill" id="scanCount">0 found</div>
+        </div>
+        <div class="scan-entries-list" id="scanList"></div>
+        <button class="add-all-btn" id="addAllBtn" onclick="addAllToLog()">✅ Add All to Calculator</button>
+        <button class="scan-again-btn" onclick="startCamera()">📷 Scan Another Photo</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<canvas id="canvas" style="display:none"></canvas>
+
+<script>
+/* ════════════════════════════════════════════
+   MANUAL CALCULATOR
+════════════════════════════════════════════ */
+const radiusButtons = {
+  btn0:12,btn11:13,btn12:14,btn13:15,btn14:16,btn15:17,btn16:18,btn17:19,btn18:20,btn19:21,btn110:22,btn111:23,
+  btn20:24,btn21:25,btn22:26,btn23:27,btn24:28,btn25:29,btn26:30,btn27:31,btn28:32,btn29:33,btn210:34,btn211:35,
+  btn30:36,btn31:37,btn32:38,btn33:39,btn34:40,btn35:41,btn36:42,btn37:43,btn38:44,btn39:45,btn310:46,btn311:47,
+  btn40:48,btn41:49,btn42:50,btn43:51,btn44:52,btn45:53,btn46:54,btn47:55,btn48:56,btn49:57,btn410:58,btn411:59,
+  btn50:60,btn51:61,btn52:62,btn53:63,btn54:64,btn55:65,btn56:66,btn57:67,btn58:68,btn59:69,btn510:70,btn511:71,
+  btn60:72,btn61:73,btn62:74,btn63:75,btn64:76,btn65:77,btn66:78,btn67:79,btn68:80,btn69:81,btn610:82,btn611:83,
+  btn70:84
+};
+const heightButtons = {
+  btn1:{label:'1',value:1},btn2:{label:'2',value:2},btn3:{label:'3',value:3},
+  btn4:{label:'4',value:4},btn5:{label:'5',value:5},btn6:{label:'6',value:6},
+  btn7:{label:'7',value:7},btn8:{label:'8',value:8},btn9:{label:'9',value:9},
+  btn10:{label:'10',value:10},btn4_3:{label:'4.3',value:4.25},btn3_3:{label:'3.3',value:3.25},
+  btn2_3:{label:'2.3',value:2.25},btn06:{label:'0.6',value:0.5}
+};
+
+let selectedRadius=null, selectedHeight=null, sums=[], entries=[];
+
+function rLabel(inches){ const f=Math.floor(inches/12),i=inches%12; return `${f}.${i}`; }
+
+const rContainer=document.getElementById('radius-btns');
+const hContainer=document.getElementById('height-btns');
+
+Object.entries(radiusButtons).forEach(([id,inches])=>{
+  const btn=document.createElement('button');
+  btn.className='btn'; btn.textContent=rLabel(inches);
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('#radius-btns .btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedRadius={id,totalInches:inches};
+    updateChips(); tryCalculate();
+  });
+  rContainer.appendChild(btn);
+});
+
+Object.entries(heightButtons).forEach(([id,{label,value}])=>{
+  const btn=document.createElement('button');
+  btn.className='btn'; btn.textContent=label;
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('#height-btns .btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedHeight={id,label,value};
+    updateChips(); tryCalculate();
+  });
+  hContainer.appendChild(btn);
+});
+
+function updateChips(){
+  const cr=document.getElementById('chip-r'), ch=document.getElementById('chip-h');
+  if(selectedRadius){cr.classList.add('set');cr.textContent=`R ${rLabel(selectedRadius.totalInches)}`;}
+  else{cr.classList.remove('set');cr.textContent='Radius —';}
+  if(selectedHeight){ch.classList.add('set');ch.textContent=`H ${selectedHeight.label}`;}
+  else{ch.classList.remove('set');ch.textContent='Height —';}
+}
+
+function tryCalculate(){
+  if(!selectedRadius||!selectedHeight)return;
+  const{totalInches}=selectedRadius;
+  const{label:hLabel,value:hValue}=selectedHeight;
+  const result=(totalInches*totalInches/2304)*hValue;
+  sums.push(result);
+  entries.push({
+    rLabel: String(rLabel(totalInches)).replace('0.', ''),
+    hLabel: (Number(hLabel) / 10),
+    value: result,
+    source: 'manual'
+  });
+  renderLog();
+  selectedRadius=null; selectedHeight=null;
+  document.querySelectorAll('#radius-btns .btn,#height-btns .btn').forEach(b=>b.classList.remove('active'));
+  updateChips();
+}
+
+function renderLog(){
+  const list=document.getElementById('log-list');
+  if(!entries.length){list.innerHTML='<li class="log-empty">No entries yet</li>';return;}
+  list.innerHTML='';
+  entries.forEach((e,i)=>{
+    const li=document.createElement('li');
+    li.className='log-item';
+    const tagClass=e.source==='scan'?'log-tag scan':'log-tag';
+    li.innerHTML=`
+      <span class="${tagClass}">${e.source==='scan'?'SCAN':'MANUAL'}</span>
+      <span>
+        #${i+1} &nbsp;
+        ${String(e.rLabel).replace('0.', '')} × ${(Number(e.hLabel) / 10)}
+      </span>
+      <span class="log-val">${(+e.value).toFixed(3)} ft³</span>
+      <button class="log-rm" onclick="removeEntry(${i})">✕</button>`;
+    list.appendChild(li);
+  });
+}
+
+function removeEntry(i){
+  sums.splice(i,1); entries.splice(i,1); renderLog();
+  document.getElementById('result-num').textContent=sums.length?sums.reduce((a,v)=>a+v,0).toFixed(3):'—';
+}
+
+document.getElementById('cal').addEventListener('click',()=>{
+  document.getElementById('result-num').textContent=sums.reduce((a,v)=>a+v,0).toFixed(3);
+});
+document.getElementById('cnl').addEventListener('click',()=>{
+  if(!sums.length)return;
+  sums.pop(); entries.pop(); renderLog();
+  document.getElementById('result-num').textContent=sums.length?sums.reduce((a,v)=>a+v,0).toFixed(3):'—';
+});
+document.getElementById('rst').addEventListener('click',()=>{
+  sums=[];entries=[];renderLog();
+  document.getElementById('result-num').textContent='—';
+  selectedRadius=null;selectedHeight=null;
+  document.querySelectorAll('.btn').forEach(b=>b.classList.remove('active'));
+  updateChips();
+});
+
+/* ════════════════════════════════════════════
+   SCAN FEATURE
+════════════════════════════════════════════ */
+const GEMINI_MODEL = "gemini-1.5-flash";
+
+const PROMPT=`You are a wood log volume calculator assistant.
+The image shows handwritten measurement lines like "4 x 12" or "7 x 36".
+First number = radius in plain inches (e.g. 4 = 4 inches).
+Second number = height in ft.in format:
+- "12" means 1 foot 2 inches = 14 inches total
+- "36" means 3 feet 6 inches = 42 inches total
+Extract EVERY line exactly as written. Do NOT convert — return raw numbers only.
+Respond ONLY as raw JSON, no markdown, no extra text:
+{"entries":[{"a_raw":"4","b_raw":"12"},{"a_raw":"7","b_raw":"36"}]}`;
+
+let stream=null, facing="environment", capturedB64=null, capturedPreview=null, scanEntries=[], API_KEY="";
+
+const GEMINI_STORAGE_KEY = 'wood_gemini_key';
+
+function openScan(){
+  document.getElementById('scanModal').classList.add('open');
+  loadKey();
+}
+function closeScan(){
+  document.getElementById('scanModal').classList.remove('open');
+  stopCam();
+}
+document.getElementById('scanModal').addEventListener('click',function(e){
+  if(e.target===this)closeScan();
+});
+
+function ssShow(id){
+  document.querySelectorAll('.scan-screen').forEach(s=>s.classList.toggle('active',s.id===id));
+  const titles={'ss-setup':'Setup API Key','ss-idle':'Scan Measurements','ss-camera':'Take Photo','ss-preview':'Preview','ss-loading':'Processing…','ss-results':'Scanned Results'};
+  document.getElementById('modalTitle').textContent=titles[id]||'Scan';
+}
+
+function loadKey(){
+  const k=localStorage.getItem(GEMINI_STORAGE_KEY)||'';
+  if(k){API_KEY=k;ssShow('ss-idle');}else{ssShow('ss-setup');}
+}
+function saveKey(){
+  const v=document.getElementById('apiInput').value.trim();
+  const err=document.getElementById('apiErr');
+  if(v.length < 10){err.style.display='block';return;}
+  err.style.display='none';
+  API_KEY=v; localStorage.setItem(GEMINI_STORAGE_KEY,v); ssShow('ss-idle');
+}
+function changeKey(){
+  localStorage.removeItem(GEMINI_STORAGE_KEY);
+  document.getElementById('apiInput').value='';
+  document.getElementById('apiErr').style.display='none';
+  ssShow('ss-setup');
+}
+
+async function startCamera(){
+  try{
+    stopCam();
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:facing,width:{ideal:1920},height:{ideal:1080}}});
+    document.getElementById('video').srcObject=stream;
+    ssShow('ss-camera');
+  }catch(e){alert('Camera error: '+e.message);}
+}
+function stopCam(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}}
+function flipCam(){facing=facing==='environment'?'user':'environment';startCamera();}
+
+function capture(){
+  const v=document.getElementById('video');
+  const c=document.getElementById('canvas');
+  c.width=v.videoWidth; c.height=v.videoHeight;
+  c.getContext('2d').drawImage(v,0,0);
+  capturedB64=c.toDataURL('image/jpeg',0.92).split(',')[1];
+  capturedPreview=c.toDataURL('image/jpeg',0.75);
+  stopCam();
+  document.getElementById('previewImg').src=capturedPreview;
+  document.getElementById('errBox').style.display='none';
+  ssShow('ss-preview');
+}
+
+function handleUpload(e){
+  const file=e.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const d=ev.target.result;
+    capturedPreview=d; capturedB64=d.split(',')[1];
+    document.getElementById('previewImg').src=d;
+    document.getElementById('errBox').style.display='none';
+    ssShow('ss-preview');
+  };
+  reader.readAsDataURL(file);
+}
+
+async function scanImage(){
+  if(!capturedB64)return;
+  document.getElementById('loadThumb').src=capturedPreview;
+  document.getElementById('loadStatus').textContent='AI IS RECOGNISING HANDWRITING';
+  ssShow('ss-loading');
+  try{
+    document.getElementById('loadStatus').textContent='USING GEMINI ' + GEMINI_MODEL.toUpperCase();
+    const res=await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${API_KEY}`,
+      {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          contents:[{parts:[
+            {inline_data:{mime_type:'image/jpeg',data:capturedB64}},
+            {text:PROMPT}
+          ]}],
+          generationConfig:{maxOutputTokens:800,temperature:0}
+        })
+      }
+    );
+    const data=await res.json();
+    if(data.error){throw new Error(data.error.message);}
+    let text=(data.candidates?.[0]?.content?.parts?.[0]?.text||'').replace(/```json|```/g,'').trim();
+    const match=text.match(/\{[\s\S]*\}/);
+    if(!match){throw new Error('No JSON found in Gemini response');}
+    buildScanResults(JSON.parse(match[0]).entries||[]);
+  }catch(ex){
+    document.getElementById('errBox').style.display='block';
+    document.getElementById('errBox').textContent='Gemini error: '+ex.message+'\n\nCheck your API key or internet.';
+    ssShow('ss-preview');
+  }
+}
+
+function ftinToInches(raw,isFirst){
+  const s=String(raw).trim();
+  if(isFirst)return parseInt(s);
+  if(s.length===1)return parseInt(s)*12;
+  return parseInt(s[0])*12+parseInt(s.slice(1));
+}
+function calcVol(aRaw,bRaw){
+  return(ftinToInches(aRaw,true)*Math.pow(ftinToInches(bRaw,false),2))/2304;
+}
+
+function buildScanResults(raw){
+  scanEntries=raw.map(e=>({
+    a_raw:e.a_raw, b_raw:e.b_raw,
+    a_in:ftinToInches(e.a_raw,true),
+    b_in:ftinToInches(e.b_raw,false),
+    volume:+calcVol(e.a_raw,e.b_raw).toFixed(3)
+  }));
+  renderScanList();
+  ssShow('ss-results');
+}
+
+function renderScanList(){
+  document.getElementById('scanCount').textContent=scanEntries.length+' found';
+  const list=document.getElementById('scanList');
+  if(!scanEntries.length){
+    list.innerHTML='<div class="scan-no-data">⚠️ No measurements detected.<br>Try better lighting or a clearer photo.</div>';
+    document.getElementById('addAllBtn').style.display='none';
+    return;
+  }
+  document.getElementById('addAllBtn').style.display='block';
+  list.innerHTML='';
+  scanEntries.forEach((e,i)=>{
+    const div=document.createElement('div');
+    div.className='scan-entry';
+    div.innerHTML=`
+      <span class="se-label">#${i+1} &nbsp;${e.a_raw} × ${e.b_raw} <span class="se-sub">(${e.a_in}" × ${e.b_in}")</span></span>
+      <span class="se-vol">${e.volume.toFixed(3)} ft³</span>
+      <button class="se-rm" onclick="removeScanEntry(${i})">✕</button>`;
+    list.appendChild(div);
+  });
+}
+
+function removeScanEntry(i){
+  scanEntries.splice(i,1); renderScanList();
+}
+
+function addAllToLog(){
+  scanEntries.forEach(e=>{
+    const rl=`${Math.floor(e.a_in/12)}.${e.a_in%12}`;
+    sums.push(e.volume);
+    entries.push({rLabel:rl,hLabel:e.b_raw,value:e.volume,source:'scan'});
+  });
+  renderLog();
+  document.getElementById('result-num').textContent=sums.reduce((a,v)=>a+v,0).toFixed(3);
+  closeScan();
+}
+</script>
+</body>
+</html>
